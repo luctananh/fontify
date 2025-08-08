@@ -1,6 +1,7 @@
 {
-    "buildCommand": "cd appfont && yarn build",
-    "outputDirectory": "appfont/dist",
-    "installCommand": "cd appfont && yarn install",
-    "framework": "vite"
+    "buildCommand": "yarn build",
+    "outputDirectory": "dist",
+    "installCommand": "yarn install",
+    "framework": "vite",
+    "rootDirectory": "appfont"
 }
