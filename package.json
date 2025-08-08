@@ -22,7 +22,7 @@
     "@shopify/app-bridge-react": "^4.1.5",
     "@shopify/polaris": "^13.8.0",
     "@shopify/polaris-icons": "^9.3.0",
-    "gadget-server": "link:.gadget/server",
+    "gadget-server": "^1.0.0",
     "package": "^1.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
