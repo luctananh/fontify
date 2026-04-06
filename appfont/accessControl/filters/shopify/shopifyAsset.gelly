@@ -1,3 +1,0 @@
-filter ($session: Session) on ShopifyAsset [
-  where shopId == $session.shopId
-]
