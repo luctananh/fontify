@@ -41,7 +41,13 @@ export function useFontData({ setToastContent, setToastActive, setErrorContent, 
                 }
 
                 const storedThemeId = localStorage.getItem(SELECTED_THEME_KEY);
-                if (storedThemeId) setSelectedThemeId(storedThemeId);
+                if (storedThemeId) {
+                    if (themeResult.some(t => String(t.id) === String(storedThemeId))) {
+                        setSelectedThemeId(storedThemeId);
+                    } else {
+                        localStorage.removeItem(SELECTED_THEME_KEY);
+                    }
+                }
             } catch (error) {
                 console.error('Error fetching data:', error);
                 setErrorContent('Failed to load initial data. Please try refreshing.');

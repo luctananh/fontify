@@ -6,7 +6,6 @@ import {
     Layout,
     Page,
     Card,
-    Toast,
     Text,
     ButtonGroup,
     MediaCard,
@@ -14,8 +13,6 @@ import {
     Banner,
     BlockStack,
     Grid,
-    AppProvider,
-    Frame,
 } from '@shopify/polaris';
 import { XIcon } from '@shopify/polaris-icons';
 import { api } from '../api';
@@ -34,7 +31,6 @@ export default function FontManager() {
     const setFontDataFromAppPage = location.state?.setFontDataProp;
     const isEditMode = new URLSearchParams(location.search).get('edit') === 'true';
     const fontIdFromUrl = new URLSearchParams(location.search).get('fontId');
-    const [fontToDeleteId, setFontToDeleteId] = useState(fontIdFromUrl);
     const [selected, setSelected] = useState(0);
     const [fileName, setFileName] = useState('');
     const [file, setFile] = useState(null);
@@ -42,8 +38,6 @@ export default function FontManager() {
     const [selectedFont, setSelectedFont] = useState(null);
     const [fontDetails, setFontDetails] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [toastActive, setToastActive] = useState(false);
-    const [toastContent, setToastContent] = useState('');
     const [fontsSelected, setFontsSelected] = useState({});
     const [fontNamesSelected, setFontNamesSelected] = useState('');
     const [bannerActive, setBannerActive] = useState(false);
@@ -59,6 +53,8 @@ export default function FontManager() {
         handleSearchChange,
     } = useGoogleFonts();
     const [bannerContent, setBannerContent] = useState('');
+    const [toastContent, setToastContent] = useState('');
+    const [toastActive, setToastActive] = useState(false);
     const [fileError, setFileError] = useState(true); // Ban đầu hiển thị lỗi Add file
     const [nameError, setNameError] = useState(true); // Ban đầu hiển thị lỗi Name file
     const [elementsError, setElementsError] = useState(true); // Ban đầu hiển thị lỗi Assign font to elements
@@ -137,12 +133,10 @@ export default function FontManager() {
 
     const fetchFonts = async () => {
         try {
-            await api.font.findMany();
-            fetchGoogleFonts((msg) => { setToastContent(msg); setToastActive(true); });
+            fetchGoogleFonts((msg) => { shopify.toast.show(msg); });
         } catch (error) {
             console.error('Error fetching fonts:', error);
-            setToastContent('Error fetching fonts: ' + error);
-            setToastActive(true);
+            shopify.toast.show('Error fetching fonts: ' + error);
         }
     };
 
@@ -188,8 +182,7 @@ export default function FontManager() {
                     await handleCreateUpdateFontSetting(keyfont, null, response, visibilityData);
                 } catch (error) {
                     console.error('Error uploading/updating file to Gadget:', error);
-                    setToastContent('Upload failed. Please try again: ' + error.message);
-                    setToastActive(true);
+                    shopify.toast.show('Upload failed. Please try again: ' + error.message);
                 } finally {
                     setLoading(false);
                 }
@@ -197,14 +190,12 @@ export default function FontManager() {
 
             reader.onerror = (error) => {
                 console.error('Error reading file:', error);
-                setToastContent('Error reading file. Please try again.');
-                setToastActive(true);
+                shopify.toast.show('Error reading file. Please try again.');
                 setLoading(false);
             };
         } catch (error) {
             console.error('Error uploading file:', error);
-            setToastContent('Upload failed. Please try again: ' + error.message);
-            setToastActive(true);
+            shopify.toast.show('Upload failed. Please try again: ' + error.message);
             setLoading(false);
         }
     };
@@ -236,8 +227,7 @@ export default function FontManager() {
                 })
                 .catch((error) => {
                     console.error('Error loading font:', error);
-                    setToastContent('Failed to load font for preview. Please check the file format.');
-                    setToastActive(true);
+                    shopify.toast.show('Failed to load font for preview. Please check the file format.');
                 });
         },
         []
@@ -486,8 +476,7 @@ export default function FontManager() {
                 await api.applyFontToTheme();
 
                 if (originalFontType !== newFontType) {
-                    setToastContent(`Font type changed to ${newFontType === 'google' ? 'Google Font' : 'Upload Font'}`);
-                    setToastActive(true);
+                    shopify.toast.show(`Font type changed to ${newFontType === 'google' ? 'Google Font' : 'Upload Font'}`);
                 }
                 navigate('/', { state: { toastMessage: 'Font updated successfully!' } });
             } catch (error) {
@@ -505,8 +494,7 @@ export default function FontManager() {
         let hasAnyError = false; // Flag for overall errors
         const shop = await api.shopifyShop.findFirst({ select: { id: true } });
         if (!shop || !shop.id) {
-            setToastContent('Could not fetch Shop ID');
-            setToastActive(true);
+            shopify.toast.show('Could not fetch Shop ID');
             return;
         }
         const shopid = String(shop.id);
@@ -638,8 +626,7 @@ export default function FontManager() {
         } else if (keyfont === 'upload') {
             if (!createdFontData) {
                 console.warn("handleCreateUpdateFontSetting called for upload without createdFontData.");
-                setToastContent('Error processing uploaded font data.');
-                setToastActive(true);
+                shopify.toast.show('Error processing uploaded font data.');
                 return;
             }
             const areElementsMissing_Upload = !selectedTags; // Re-check elements here
@@ -743,8 +730,7 @@ export default function FontManager() {
 
             await api.applyFontToTheme(); // Apply font to theme
 
-            setToastContent('Font applied successfully!');
-            setToastActive(true);
+            shopify.toast.show('Font applied successfully!');
             setBannerActive(false); // Ensure banner off on final success
 
             navigate('/', { state: { toastMessage: 'Font saved successfully!' } });
@@ -851,8 +837,7 @@ export default function FontManager() {
             }
         } catch (error) {
             console.error('Error deleting font:', error);
-            setToastContent('Failed to delete font: ' + error);
-            setToastActive(true);
+            shopify.toast.show('Failed to delete font: ' + error);
         }
     }
 
@@ -1051,212 +1036,206 @@ export default function FontManager() {
     });
 
     return (
-        <AppProvider>
-            <Frame>
-                <Page title="Fonts" backAction={{ content: 'Shop Information', onAction: () => navigate('/'), }}>
-                    {showMediaCard && (
-                        <div style={{ marginBottom: '20px', width: '100%', height: '25%' }}>
-                            <MediaCard
-                                title="Getting started video guide"
-                                primaryAction={{
-                                    content: 'Learn more',
-                                    onAction: handleLearnMoreClick,
-                                }}
-                                description={`Let see video guide to learn how to use App`}
-                                popoverActions={[{
-                                    content: 'Dismiss',
-                                    onAction: () => setShowMediaCard(false) // Thêm logic ẩn card
-                                }]}
-                            >
-                                <VideoThumbnail
-                                    videoLength={420}
-                                    videoProgress={420}
-                                    showVideoProgress
-                                    thumbnailUrl="https://blog.tcea.org/wp-content/uploads/2021/08/font-heading-image.png"
-                                    onClick={() => console.log('clicked')}
+        <Page title="Fonts" backAction={{ content: 'Shop Information', onAction: () => navigate('/'), }}>
+            {showMediaCard && (
+                <div style={{ marginBottom: '20px', width: '100%', height: '25%' }}>
+                    <MediaCard
+                        title="Getting started video guide"
+                        primaryAction={{
+                            content: 'Learn more',
+                            onAction: handleLearnMoreClick,
+                        }}
+                        description={`Let see video guide to learn how to use App`}
+                        popoverActions={[{
+                            content: 'Dismiss',
+                            onAction: () => setShowMediaCard(false) // Thêm logic ẩn card
+                        }]}
+                    >
+                        <VideoThumbnail
+                            videoLength={420}
+                            videoProgress={420}
+                            showVideoProgress
+                            thumbnailUrl="https://blog.tcea.org/wp-content/uploads/2021/08/font-heading-image.png"
+                            onClick={() => console.log('clicked')}
+                        />
+                    </MediaCard>
+                </div>
+            )}
+
+            {showVideoCard && (
+                <BlockStack>
+                    <div style={{ marginBottom: '20px' }}>
+                        <Card
+                            title="Video Guide"
+                            actions={[{
+                                content: 'Close video',
+                                onAction: () => setShowVideoCard(false)
+                            }]}
+                        >
+                            {/* Thêm nút close icon ở góc phải trên */}
+                            <div style={{
+                                position: 'absolute',
+                                top: '16px',
+                                right: '16px',
+                                zIndex: 1
+                            }}>
+                                <Button
+                                    icon={XIcon}
+                                    onClick={() => setShowVideoCard(false)}
+                                    accessibilityLabel="Dismiss video"
+                                    plain
                                 />
-                            </MediaCard>
-                        </div>
-                    )}
-
-                    {showVideoCard && (
-                        <BlockStack>
-                            <div style={{ marginBottom: '20px' }}>
-                                <Card
-                                    title="Video Guide"
-                                    sectioned
-                                    actions={[{
-                                        content: 'Close video',
-                                        onAction: () => setShowVideoCard(false)
-                                    }]}
-                                >
-                                    {/* Thêm nút close icon ở góc phải trên */}
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '16px',
-                                        right: '16px',
-                                        zIndex: 1
-                                    }}>
-                                        <Button
-                                            icon={XIcon}
-                                            onClick={() => setShowVideoCard(false)}
-                                            accessibilityLabel="Dismiss video"
-                                            plain
-                                        />
-                                    </div>
-
-                                    <div style={{ position: 'relative', paddingTop: '56.25%' }}>
-                                        <iframe
-                                            style={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                width: '100%',
-                                                height: '100%',
-                                                border: 'none',
-                                                borderRadius: '8px'
-                                            }}
-                                            src="https://cdn.shopify.com/videos/c/o/v/80d4e79e2e094db2a21192ca5826543f.mp4"
-                                            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                        />
-                                    </div>
-                                </Card>
                             </div>
-                        </BlockStack>
-                    )}
 
-                    <Layout>
-                        <Layout.Section >
-                            <BlockStack style={{ flexDirection: 'column', gap: '15px', marginBottom: '50px' }}>
-                                {bannerActive && (
-                                    <Banner ref={bannerRef} title="There’s an error with this Fonts setting" onDismiss={() => setBannerActive(false)} tone="critical">
-                                        <p>{bannerContent}</p>
-                                    </Banner>
-                                )}
-                                <Card>
-                                    <Tabs tabs={tabs} selected={selected} onSelect={handleTabChange} fitted>
-                                        <BlockStack>
-                                            {selected === 0 && (
-                                                <UploadFontTab
-                                                    file={file}
-                                                    fileName={fileName}
-                                                    isEditMode={isEditMode}
-                                                    isCleared={isCleared}
-                                                    saveButtonClicked={saveButtonClicked}
-                                                    fileError={fileError}
-                                                    nameError={nameError}
-                                                    onDrop={handleDropZoneDrop}
-                                                    onNameChange={handleNameChange}
-                                                    onClear={handleClearDropZone}
-                                                />
-                                            )}
-                                            {selected === 1 && (
-                                                <GoogleFontsTab
-                                                    fontNamesSelected={fontNamesSelected}
-                                                    paginatedFonts={paginatedFonts}
-                                                    fontsSelected={fontsSelected}
-                                                    fontNameError={fontNameError}
-                                                    currentPage={currentPage}
-                                                    totalPages={totalPages}
-                                                    onFontChange={(value, isText) => {
-                                                        if (isText) {
-                                                            setFontNamesSelected(value);
-                                                        } else {
-                                                            handleFontChange(value);
-                                                        }
-                                                    }}
-                                                    onSearchChange={handleSearchChange}
-                                                    onPageChange={handlePageChange}
-                                                />
-                                            )}
-                                        </BlockStack>
-                                    </Tabs>
-                                </Card>
+                            <div style={{ position: 'relative', paddingTop: '56.25%' }}>
+                                <iframe
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        border: 'none',
+                                        borderRadius: '8px'
+                                    }}
+                                    src="https://cdn.shopify.com/videos/c/o/v/80d4e79e2e094db2a21192ca5826543f.mp4"
+                                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                />
+                            </div>
+                        </Card>
+                    </div>
+                </BlockStack>
+            )}
 
-                                <Grid>
-                                    <Grid.Cell columnSpan={{ xs: 6, sm: 3, md: 3, lg: 6, xl: 6 }}>
-                                        <ElementSelector
-                                            selectedElements={selectedElements}
-                                            allElementsSelected={allElementsSelected}
-                                            onElementChange={handleElementChange}
-                                            onAllElementsChange={handleAllElementsChange}
+            <Layout>
+                <Layout.Section >
+                    <BlockStack style={{ flexDirection: 'column', gap: '15px', marginBottom: '50px' }}>
+                        {bannerActive && (
+                            <Banner ref={bannerRef} title="There’s an error with this Fonts setting" onDismiss={() => setBannerActive(false)} tone="critical">
+                                <p>{bannerContent}</p>
+                            </Banner>
+                        )}
+                        <Card>
+                            <Tabs tabs={tabs} selected={selected} onSelect={handleTabChange} fitted>
+                                <BlockStack>
+                                    {selected === 0 && (
+                                        <UploadFontTab
+                                            file={file}
+                                            fileName={fileName}
+                                            isEditMode={isEditMode}
+                                            isCleared={isCleared}
                                             saveButtonClicked={saveButtonClicked}
-                                            elementsError={elementsError}
+                                            fileError={fileError}
+                                            nameError={nameError}
+                                            onDrop={handleDropZoneDrop}
+                                            onNameChange={handleNameChange}
+                                            onClear={handleClearDropZone}
                                         />
-                                    </Grid.Cell>
-                                    <Grid.Cell columnSpan={{ xs: 6, sm: 3, md: 3, lg: 6, xl: 6 }}>
-                                        <FontPreview fontNamesSelected={fontNamesSelected} />
-                                    </Grid.Cell>
-                                </Grid>
-
-                                {/* Custom stylesheets */}
-                                <FontSizeCard
-                                    sizeMode={sizeMode}
-                                    fontSize={fontSize}
-                                    fontSizeError={fontSizeError}
-                                    saveButtonClicked={saveButtonClicked}
-                                    onSizeModeChange={(mode) => {
-                                        setSizeMode(mode);
-                                        if (mode === 'default') {
-                                            setFontSize('default');
-                                            setFontSizeError(false);
-                                        } else if (fontSize === 'default' || !fontSize) {
-                                            setFontSize('');
-                                        }
-                                    }}
-                                    onFontSizeChange={(value) => {
-                                        const numericValue = parseInt(value, 10);
-                                        if (!isNaN(numericValue) && numericValue >= 0) {
-                                            setFontSize(value.toString());
-                                            setFontSizeError(false);
-                                        } else if (value === '') {
-                                            setFontSize('');
-                                            setFontSizeError(true);
-                                        }
-                                    }}
-                                />
-
-                                {/* Visibility */}
-                                <VisibilityCard
-                                    visibilityMode={inputs?.visibilityMode}
-                                    checkedPages={checkedPages}
-                                    textFields={textFields}
-                                    saveButtonClicked={saveButtonClicked}
-                                    checkboxError={checkboxError}
-                                    onVisibilityModeChange={(mode) => handleInputChange('visibilityMode', mode)}
-                                    onPageChange={handleChanger}
-                                    onTextFieldChange={handleTextFieldChange}
-                                    onAddField={handleAddField}
-                                    onRemoveField={handleRemoveField}
-                                />
-
-                                {/* Actions */}
-                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    {isEditMode ? (
-                                        <ButtonGroup>
-                                            <Button destructive onClick={() => handleDeleteFont(fontToDeleteId)} loading={deleting}>
-                                                Delete
-                                            </Button>
-                                            <Button primary onClick={() => handleSubmit('update')} loading={loading} variant="primary">
-                                                Update
-                                            </Button>
-                                        </ButtonGroup>
-                                    ) : (
-                                        <ButtonGroup>
-                                            <Button onClick={() => navigate('/')}>Back</Button>
-                                            <Button primary onClick={selected === 0 ? () => handleSubmit('create') : () => handleCreateUpdateFontSetting('google', fontNamesSelected)} loading={loading} variant="primary">
-                                                Save
-                                            </Button>
-                                        </ButtonGroup>
                                     )}
-                                </div>
-                            </BlockStack>
-                        </Layout.Section>
-                    </Layout>
-                    {toastActive && (<Toast content={toastContent} onDismiss={() => setToastActive(false)} />)}
-                </Page>
-            </Frame>
-        </AppProvider>
+                                    {selected === 1 && (
+                                        <GoogleFontsTab
+                                            fontNamesSelected={fontNamesSelected}
+                                            paginatedFonts={paginatedFonts}
+                                            fontsSelected={fontsSelected}
+                                            fontNameError={fontNameError}
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            onFontChange={(value, isText) => {
+                                                if (isText) {
+                                                    setFontNamesSelected(value);
+                                                } else {
+                                                    handleFontChange(value);
+                                                }
+                                            }}
+                                            onSearchChange={handleSearchChange}
+                                            onPageChange={handlePageChange}
+                                        />
+                                    )}
+                                </BlockStack>
+                            </Tabs>
+                        </Card>
+
+                        <Grid>
+                            <Grid.Cell columnSpan={{ xs: 6, sm: 3, md: 3, lg: 6, xl: 6 }}>
+                                <ElementSelector
+                                    selectedElements={selectedElements}
+                                    allElementsSelected={allElementsSelected}
+                                    onElementChange={handleElementChange}
+                                    onAllElementsChange={handleAllElementsChange}
+                                    saveButtonClicked={saveButtonClicked}
+                                    elementsError={elementsError}
+                                />
+                            </Grid.Cell>
+                            <Grid.Cell columnSpan={{ xs: 6, sm: 3, md: 3, lg: 6, xl: 6 }}>
+                                <FontPreview fontNamesSelected={fontNamesSelected} />
+                            </Grid.Cell>
+                        </Grid>
+
+                        {/* Custom stylesheets */}
+                        <FontSizeCard
+                            sizeMode={sizeMode}
+                            fontSize={fontSize}
+                            fontSizeError={fontSizeError}
+                            saveButtonClicked={saveButtonClicked}
+                            onSizeModeChange={(mode) => {
+                                setSizeMode(mode);
+                                if (mode === 'default') {
+                                    setFontSize('default');
+                                    setFontSizeError(false);
+                                } else if (fontSize === 'default' || !fontSize) {
+                                    setFontSize('');
+                                }
+                            }}
+                            onFontSizeChange={(value) => {
+                                const numericValue = parseInt(value, 10);
+                                if (!isNaN(numericValue) && numericValue >= 0) {
+                                    setFontSize(value.toString());
+                                    setFontSizeError(false);
+                                } else if (value === '') {
+                                    setFontSize('');
+                                    setFontSizeError(true);
+                                }
+                            }}
+                        />
+
+                        {/* Visibility */}
+                        <VisibilityCard
+                            visibilityMode={inputs?.visibilityMode}
+                            checkedPages={checkedPages}
+                            textFields={textFields}
+                            saveButtonClicked={saveButtonClicked}
+                            checkboxError={checkboxError}
+                            onVisibilityModeChange={(mode) => handleInputChange('visibilityMode', mode)}
+                            onPageChange={handleChanger}
+                            onTextFieldChange={handleTextFieldChange}
+                            onAddField={handleAddField}
+                            onRemoveField={handleRemoveField}
+                        />
+
+                        {/* Actions */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            {isEditMode ? (
+                                <ButtonGroup>
+                                    <Button destructive onClick={() => handleDeleteFont(fontIdFromUrl)} loading={deleting}>
+                                        Delete
+                                    </Button>
+                                    <Button primary onClick={() => handleSubmit('update')} loading={loading} variant="primary">
+                                        Update
+                                    </Button>
+                                </ButtonGroup>
+                            ) : (
+                                <ButtonGroup>
+                                    <Button onClick={() => navigate('/')}>Back</Button>
+                                    <Button primary onClick={selected === 0 ? () => handleSubmit('create') : () => handleCreateUpdateFontSetting('google', fontNamesSelected)} loading={loading} variant="primary">
+                                        Save
+                                    </Button>
+                                </ButtonGroup>
+                            )}
+                        </div>
+                    </BlockStack>
+                </Layout.Section>
+            </Layout>
+        </Page>
     );
 }

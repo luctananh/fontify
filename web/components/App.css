@@ -2,3 +2,11 @@
   margin: 14px auto;
   height: 44px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.8s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+

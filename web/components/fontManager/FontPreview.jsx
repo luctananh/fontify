@@ -23,7 +23,7 @@ const sampleBlock = (label, text, fontName) => (
 
 export default function FontPreview({ fontNamesSelected }) {
     return (
-        <Card title="Font Preview" sectioned>
+        <Card>
             <Text variant="headingMd" as="h6">Preview font</Text>
             <BlockStack style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', marginTop: '5px' }}>
                 {sampleBlock('Uppercase Alphabet:', alphabetUpper, fontNamesSelected)}
