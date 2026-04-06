@@ -48,7 +48,7 @@ export const run = async ({ params, input }) => {
         // Trả về URL tệp đã upload
         return { success: true, fileUrl };
     } catch (error) {
-        console.error("Error in uploadWoff action:", error);
+        console.error("Error in uploadFontFile action:", error);
         return { success: false, error: error.message };
     }
 };

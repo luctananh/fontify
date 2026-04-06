@@ -1,9 +1,9 @@
 import { applyParams, ActionOptions } from "gadget-server";
 /** @type { ActionRun } */
 export const run = async ({ params, logger, api, connections, sessionID }) => {
-  
-  const selecteddesign = await api.selectfont.findFirst();
-  
+
+  const selecteddesign = await api.fontSetting.findFirst();
+
   console.log("Selected design:", selecteddesign);
   const sessionIF = await api.session.findById(sessionID);
   const shopId = sessionIF.shopId;
@@ -11,12 +11,12 @@ export const run = async ({ params, logger, api, connections, sessionID }) => {
   const domain = shop.domain;
   const shopifyClient = await connections.shopify.forShopDomain(domain);
   const accessToken = shopifyClient.storefrontAccessToken.shopify.options.accessToken;
-  const API_VERSION = '2024-10';
+  const API_VERSION = '2025-07';
 
   // Đảm bảo namespace đã được định nghĩa
   const namespace = "setting";  // Gán giá trị cho namespace
   const key = "style";  // Gán giá trị cho key
-  
+
   if (!accessToken || !domain) {
     throw new Error("Missing required parameters: accessToken, domain");
   }
@@ -35,7 +35,7 @@ export const run = async ({ params, logger, api, connections, sessionID }) => {
       const errorText = await metafieldsResponse.text();
       throw new Error(`Failed to fetch metafields: ${metafieldsResponse.status} - ${errorText}`);
     }
-    
+
     const metafieldsData = await metafieldsResponse.json();
     const metafields = metafieldsData.metafields;
     console.log("Existing Metafields:", metafields);

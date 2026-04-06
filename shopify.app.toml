@@ -1,18 +1,3 @@
-# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
-
-client_id = "1d24ae1af6e8c6d9bbf5780ea693f673"
-application_url = "https://appfont.gadget.app/api/shopify/install-or-render"
-embedded = true
-name = "appfont"
-handle = "appfont-fontmanager-2024"
-
-[webhooks]
-api_version = "2024-10"
-
-[auth]
-redirect_urls = [
-  "https://appfont.gadget.app/api/connections/auth/shopify/callback"
-]
-
-[build]
-include_config_on_deploy = true
+# This toml file is used for production. Only edit this file if you have a need for it
+# When you add a production config, values will be auto-populated here
+# Read more at https://docs.gadget.dev/guides/plugins/shopify/advanced-topics/shopify-app-toml

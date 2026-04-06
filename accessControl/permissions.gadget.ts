@@ -12,7 +12,7 @@ export const permissions: GadgetPermissions = {
     "shopify-app-users": {
       storageKey: "Role-Shopify-App",
       models: {
-        datafontgg: {
+        font: {
           read: true,
           actions: {
             create: true,
@@ -20,7 +20,7 @@ export const permissions: GadgetPermissions = {
             update: true,
           },
         },
-        selectfont: {
+        fontSetting: {
           read: true,
           actions: {
             create: true,
@@ -100,17 +100,16 @@ export const permissions: GadgetPermissions = {
         },
       },
       actions: {
-        applyDefaultFont: true,
+        applyFontToTheme: true,
         debugFontSettings: true,
         scheduledShopifySync: true,
-        update1: true,
-        uploadWoff: true,
+        uploadFontFile: true,
       },
     },
     unauthenticated: {
       storageKey: "unauthenticated",
       models: {
-        datafontgg: {
+        font: {
           read: true,
         },
       },

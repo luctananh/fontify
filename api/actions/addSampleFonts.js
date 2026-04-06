@@ -38,7 +38,7 @@ export const run = async ({ params, logger, api, connections }) => {
   const createdFonts = [];
   for (const font of sampleFonts) {
     try {
-      const createdFont = await api.datafontgg.create(font);
+      const createdFont = await api.font.create(font);
       createdFonts.push(createdFont);
       logger.info(`Created font: ${font.name}`);
     } catch (error) {

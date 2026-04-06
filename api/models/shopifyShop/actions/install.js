@@ -8,8 +8,8 @@ export const run = async ({ params, record, logger, api, connections }) => {
   const namespace = "setting";
   const key = "style";
   const icondefault = "applepay,visa,paypal,mastercard";
-  
-  const defaultMetafieldValue = await api.selectfont.findMany();
+
+  const defaultMetafieldValue = await api.fontSetting.findMany();
 
   const endpoint = `https://${name}.myshopify.com/admin/api/${apiVersion}/metafields.json`;
   await createShopMetafield(
@@ -21,7 +21,7 @@ export const run = async ({ params, record, logger, api, connections }) => {
   );
   applyParams(params, record);
   await save(record);
- 
+
 };
 // Hàm tạo Metafield
 async function createShopMetafield(

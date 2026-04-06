@@ -4,3 +4,6 @@ node_modules/
 extensions/*/dist
 extensions/*/node_modules
 .shopify
+.env
+.env.local
+.env*.local
